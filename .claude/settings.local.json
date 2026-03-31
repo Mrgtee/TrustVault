@@ -3,7 +3,9 @@
     "allow": [
       "Bash(rm -rf /c/Users/RIKI/trustvault-temp)",
       "Bash(npm install:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(node -e \":*)",
+      "Bash(npm run:*)"
     ]
   }
 }
