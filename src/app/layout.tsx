@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -27,7 +29,11 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <Navbar />
+            <main className="pt-16">{children}</main>
+            <Footer />
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

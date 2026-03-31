@@ -1,9 +1,10 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
       <h1 className="text-4xl font-bold tracking-tight text-white">
         TrustVault
       </h1>
-    </main>
+      <p className="mt-3 text-sm text-muted-foreground">Coming in Step 3</p>
+    </div>
   );
 }
