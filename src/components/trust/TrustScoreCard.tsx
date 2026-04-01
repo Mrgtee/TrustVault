@@ -24,45 +24,47 @@ interface TrustScoreCardProps {
   onRetry: () => void;
 }
 
-function ScoreRing({ score, loading }: { score: number; loading: boolean }) {
+function ScoreRing({ data, loading }: { data: TrustScoreData | null; loading: boolean }) {
   const radius = 80;
-  const circumference = 2 * Math.PI * radius; // 502.65
+  const circumference = 2 * Math.PI * radius;
+  const score = data?.overallScore ?? 0;
   const [animatedOffset, setAnimatedOffset] = useState(circumference);
   const [displayScore, setDisplayScore] = useState(0);
-  const targetOffset = circumference - (score / 100) * circumference;
   const color = scoreColor(score);
 
   // Animate stroke
   useEffect(() => {
-    if (loading) {
+    if (loading || !data) {
       setAnimatedOffset(circumference);
       setDisplayScore(0);
       return;
     }
+    const targetOffset = circumference - (data.overallScore / 100) * circumference;
     const strokeTimer = setTimeout(() => {
       setAnimatedOffset(targetOffset);
     }, 100);
     return () => clearTimeout(strokeTimer);
-  }, [score, loading, targetOffset, circumference]);
+  }, [data, loading, circumference]);
 
   // Animate counter from 0 to score
   useEffect(() => {
-    if (loading || score === 0) {
-      setDisplayScore(0);
-      return;
-    }
+    if (!data) return;
+    const target = data.overallScore;
+    const duration = 1200;
+    const steps = 60;
+    const increment = target / steps;
     let current = 0;
-    const step = Math.max(1, Math.floor(score / 40));
-    const interval = setInterval(() => {
-      current += step;
-      if (current >= score) {
-        current = score;
-        clearInterval(interval);
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setDisplayScore(target);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.round(current));
       }
-      setDisplayScore(current);
-    }, 30);
-    return () => clearInterval(interval);
-  }, [score, loading]);
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [data]);
 
   return (
     <div className="relative flex items-center justify-center">
@@ -137,7 +139,7 @@ export function TrustScoreCard({ data, loading, error, onRetry }: TrustScoreCard
       style={{ animation: "tv-fade-in-up 0.5s ease-out both" }}
     >
       {/* Score ring */}
-      <ScoreRing score={data?.overallScore ?? 0} loading={loading} />
+      <ScoreRing data={data} loading={loading} />
 
       {/* Metric pills */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

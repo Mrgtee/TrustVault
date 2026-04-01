@@ -10,14 +10,7 @@ interface ScoreBreakdownProps {
   loading: boolean;
 }
 
-function FactorBar({ name, score, delay }: { name: string; score: number; delay: number }) {
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setWidth(score), 100 + delay);
-    return () => clearTimeout(timer);
-  }, [score, delay]);
-
+function FactorBar({ name, score, index, mounted }: { name: string; score: number; index: number; mounted: boolean }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
@@ -28,8 +21,9 @@ function FactorBar({ name, score, delay }: { name: string; score: number; delay:
         <div
           className="h-full rounded-full bg-[#84cc16]"
           style={{
-            width: `${width}%`,
-            transition: "width 1s ease-out",
+            width: mounted ? `${score}%` : "0%",
+            transition: "width 0.8s ease-out",
+            transitionDelay: `${index * 0.1}s`,
           }}
         />
       </div>
@@ -50,6 +44,13 @@ function SkeletonBar() {
 }
 
 export function ScoreBreakdown({ factors, dataSource, timestamp, loading }: ScoreBreakdownProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const formattedTime = timestamp
     ? formatRelativeTime(timestamp)
     : "just now";
@@ -73,7 +74,7 @@ export function ScoreBreakdown({ factors, dataSource, timestamp, loading }: Scor
           </>
         ) : (
           factors?.map((f, i) => (
-            <FactorBar key={f.name} name={f.name} score={f.score} delay={i * 100} />
+            <FactorBar key={f.name} name={f.name} score={f.score} index={i} mounted={mounted} />
           ))
         )}
       </div>
