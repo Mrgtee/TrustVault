@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function HeroSection() {
+  const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
+  const [address, setAddress] = useState("");
+  const [inputError, setInputError] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -12,6 +16,16 @@ export function HeroSection() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  function handleQuery() {
+    const trimmed = address.trim();
+    if (!trimmed) {
+      setInputError(true);
+      setTimeout(() => setInputError(false), 1000);
+      return;
+    }
+    router.push(`/query?address=${encodeURIComponent(trimmed)}`);
+  }
 
   const opacity = Math.max(0, 1 - scrollY / 350);
   const scale = Math.max(0.96, 1 - scrollY / 5000);
@@ -83,13 +97,27 @@ export function HeroSection() {
           className="mt-10 w-full"
           style={{ maxWidth: 560, animation: "tv-fade-in-up 0.5s ease-out 0.65s both" }}
         >
-          <div className="flex rounded-lg border border-white/20 bg-white/[0.04] backdrop-blur-sm">
+          <div
+            className="flex rounded-lg bg-white/[0.04] backdrop-blur-sm"
+            style={{
+              border: inputError
+                ? "1px solid rgba(239,68,68,0.6)"
+                : "1px solid rgba(255,255,255,0.2)",
+              transition: "border-color 0.3s ease",
+            }}
+          >
             <input
               type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleQuery()}
               placeholder="Enter any wallet address — 0x..."
               className="flex-1 bg-transparent px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none"
             />
-            <button className="m-1 rounded-md bg-[#84cc16] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)]">
+            <button
+              onClick={handleQuery}
+              className="m-1 rounded-md bg-[#84cc16] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)]"
+            >
               Query
             </button>
           </div>
