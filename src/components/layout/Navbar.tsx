@@ -1,7 +1,4 @@
-"use client";
-
 import { ShieldCheck } from "lucide-react";
-import { ConnectKitButton } from "connectkit";
 
 export function Navbar() {
   return (
@@ -16,7 +13,15 @@ export function Navbar() {
             Powered by Inco Lightning
           </span>
         </div>
-        <ConnectKitButton />
+
+        {/* Network status pill */}
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/50">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#84cc16] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#84cc16]" />
+          </span>
+          Base Sepolia
+        </div>
       </div>
     </nav>
   );
