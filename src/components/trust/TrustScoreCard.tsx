@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConnectKitButton } from "connectkit";
 import type { TrustScoreData } from "@/hooks/useTrustScore";
+import { useVault, type VaultStatus } from "@/hooks/useVault";
 
 function scoreColor(score: number): string {
   if (score >= 75) return "#84cc16";
@@ -109,6 +111,194 @@ function SkeletonPill() {
   return <div className="h-8 w-28 animate-pulse rounded-full bg-white/5" />;
 }
 
+function Spinner() {
+  return (
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function statusLabel(status: VaultStatus): string {
+  switch (status) {
+    case "encrypting":
+      return "Encrypting with Inco Lightning...";
+    case "storing":
+      return "Storing on Base Sepolia...";
+    case "checking":
+      return "Checking vault access...";
+    default:
+      return "";
+  }
+}
+
+function VaultSection({
+  data,
+  loading,
+}: {
+  data: TrustScoreData | null;
+  loading: boolean;
+}) {
+  const vault = useVault();
+  const isBusy =
+    vault.status === "encrypting" ||
+    vault.status === "storing" ||
+    vault.status === "checking";
+
+  // Error state
+  if (vault.status === "error") {
+    return (
+      <div className="mt-10 w-full space-y-3">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-xs text-red-400">{vault.error}</p>
+        </div>
+        <button
+          onClick={vault.reset}
+          className="w-full rounded-lg border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/5"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // Access result — granted
+  if (vault.accessResult === true) {
+    return (
+      <div className="mt-10 w-full space-y-4">
+        <div
+          className="flex items-center justify-center gap-3 rounded-lg border border-[#84cc16]/30 bg-[#84cc16]/10 py-4"
+          style={{ animation: "tv-fade-in-up 0.4s ease-out both" }}
+        >
+          <div className="relative flex h-3 w-3">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#84cc16] opacity-75" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-[#84cc16]" />
+          </div>
+          <span className="text-sm font-bold tracking-wide text-[#84cc16]">
+            ACCESS GRANTED
+          </span>
+        </div>
+        <p className="text-center text-xs text-white/30">
+          Score meets the encrypted threshold
+        </p>
+      </div>
+    );
+  }
+
+  // Access result — denied
+  if (vault.accessResult === false) {
+    return (
+      <div className="mt-10 w-full space-y-4">
+        <div
+          className="flex items-center justify-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 py-4"
+          style={{ animation: "tv-fade-in-up 0.4s ease-out both" }}
+        >
+          <span className="text-sm font-bold tracking-wide text-red-400">
+            ACCESS DENIED
+          </span>
+        </div>
+        <p className="text-center text-xs text-white/40">
+          Score below threshold
+        </p>
+      </div>
+    );
+  }
+
+  // Success — score stored, show check access button
+  if (vault.status === "success" && vault.hasStoredScore) {
+    return (
+      <div className="mt-10 w-full space-y-3">
+        <div className="flex items-center justify-center gap-2 py-2 text-sm text-[#84cc16]">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          <span className="font-semibold">Score Encrypted</span>
+        </div>
+        {vault.txHash && (
+          <a
+            href={`https://sepolia.basescan.org/tx/${vault.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center text-xs text-white/30 underline decoration-white/10 transition-colors hover:text-white/50"
+          >
+            View transaction
+          </a>
+        )}
+        <button
+          onClick={vault.checkAccess}
+          className="w-full rounded-lg border border-[#84cc16]/30 bg-[#84cc16]/10 py-3.5 text-sm font-semibold text-[#84cc16] transition-all hover:bg-[#84cc16]/20"
+        >
+          Check Vault Access
+        </button>
+      </div>
+    );
+  }
+
+  // Busy — encrypting / storing / checking
+  if (isBusy) {
+    return (
+      <div className="mt-10 w-full space-y-3">
+        <button
+          disabled
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#84cc16]/50 py-3.5 text-sm font-semibold text-black"
+        >
+          <Spinner />
+          {statusLabel(vault.status)}
+        </button>
+        {vault.txHash && (
+          <a
+            href={`https://sepolia.basescan.org/tx/${vault.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center text-xs text-white/30 underline decoration-white/10 transition-colors hover:text-white/50"
+          >
+            View transaction
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  // Wallet not connected
+  if (!vault.isConnected) {
+    return (
+      <div className="mt-10 w-full space-y-3">
+        <ConnectKitButton.Custom>
+          {({ show }) => (
+            <button
+              onClick={show}
+              disabled={loading}
+              className="w-full rounded-lg bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40"
+            >
+              Connect Wallet to Encrypt Score
+            </button>
+          )}
+        </ConnectKitButton.Custom>
+        <p className="text-center text-xs text-white/30">
+          No wallet needed to query -- connection only required for on-chain encryption
+        </p>
+      </div>
+    );
+  }
+
+  // Connected, idle — show encrypt button
+  return (
+    <div className="mt-10 w-full space-y-3">
+      <button
+        onClick={() => data && vault.encryptAndStore(data.overallScore)}
+        disabled={loading || !data}
+        className="w-full rounded-lg bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40 disabled:hover:bg-[#84cc16] disabled:hover:shadow-none"
+      >
+        Encrypt Score On-Chain
+      </button>
+      <p className="mt-3 text-xs text-white/30">
+        Requires wallet connection on Base Sepolia
+      </p>
+    </div>
+  );
+}
+
 export function TrustScoreCard({ data, loading, error, onRetry }: TrustScoreCardProps) {
   // Error state
   if (error) {
@@ -158,16 +348,8 @@ export function TrustScoreCard({ data, loading, error, onRetry }: TrustScoreCard
         )}
       </div>
 
-      {/* Encrypt CTA */}
-      <button
-        className="mt-10 w-full rounded-lg bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40 disabled:hover:bg-[#84cc16] disabled:hover:shadow-none"
-        disabled={loading}
-      >
-        Encrypt Score On-Chain
-      </button>
-      <p className="mt-3 text-xs text-white/30">
-        Requires wallet connection on Base Sepolia
-      </p>
+      {/* Vault interaction section */}
+      <VaultSection data={data} loading={loading} />
     </div>
   );
 }
