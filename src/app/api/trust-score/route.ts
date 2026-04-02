@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     const data = await response.json()
     return NextResponse.json(data)
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     return NextResponse.json({ error: "MCP unavailable" }, { status: 503 })
   }
