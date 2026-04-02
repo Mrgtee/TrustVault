@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import type { TrustScoreData } from "@/hooks/useTrustScore";
 import { useVault, type VaultStatus } from "@/hooks/useVault";
@@ -140,6 +141,8 @@ function VaultSection({
   data: TrustScoreData | null;
   loading: boolean;
 }) {
+  const { address, isConnected, status } = useAccount();
+  const walletReady = isConnected && !!address && status === "connected";
   const vault = useVault();
   const isBusy =
     vault.status === "encrypting" ||
@@ -261,17 +264,16 @@ function VaultSection({
   }
 
   // Wallet not connected
-  if (!vault.isConnected) {
+  if (!walletReady) {
     return (
       <div className="mt-10 w-full space-y-3">
         <ConnectKitButton.Custom>
-          {({ show }) => (
+          {({ isConnected, show }) => (
             <button
               onClick={show}
-              disabled={loading}
-              className="w-full rounded-lg bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40"
+              className="w-full py-4 rounded-xl font-semibold text-black bg-lime-500 hover:bg-lime-400 transition-colors"
             >
-              Connect Wallet to Encrypt Score
+              {isConnected ? "Switch to Base Sepolia" : "Connect Wallet to Encrypt Score"}
             </button>
           )}
         </ConnectKitButton.Custom>

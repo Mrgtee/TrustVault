@@ -13,23 +13,12 @@ export async function queryTrustScore(
   address: string,
   signal?: AbortSignal
 ): Promise<TrustScoreResponse> {
-  const response = await fetch("https://mcp-trust.intuition.box", {
+  const response = await fetch("/api/trust-score", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: "tools/call",
-      params: {
-        name: "get_trust_score",
-        arguments: {
-          address: address,
-          include_breakdown: true,
-        },
-      },
-    }),
+    body: JSON.stringify({ address }),
     signal,
   });
 
