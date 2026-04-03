@@ -6,6 +6,20 @@ import { baseSepolia } from "wagmi/chains";
 import { CONTRACT_ADDRESS } from "@/constants";
 import { VAULT_ABI } from "@/lib/vaultAbi";
 
+// IncoLightning executor address on Base Sepolia (from Lib.sol)
+const INCO_LIGHTNING_ADDRESS =
+  "0x168FDc3Ae19A5d5b03614578C58974FF30FCBe92" as const;
+
+const INCO_FEE_ABI = [
+  {
+    name: "getFee",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
 export type VaultStatus =
   | "idle"
   | "encrypting"
@@ -48,12 +62,19 @@ export function useVault() {
 
       setStatus("storing");
 
-      // Call storeEncryptedScore on the contract
+      // Query the current Inco fee on-chain (e.newEuint256 forwards this to IncoLightning)
+      const incoFee = await publicClient!.readContract({
+        address: INCO_LIGHTNING_ADDRESS,
+        abi: INCO_FEE_ABI,
+        functionName: "getFee",
+      });
+
       const hash = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: VAULT_ABI,
         functionName: "storeEncryptedScore",
         args: [encryptedInput as `0x${string}`],
+        value: incoFee,
         chain: baseSepolia,
       });
 
