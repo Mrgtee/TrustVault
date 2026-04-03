@@ -188,6 +188,63 @@ async function callMcpTool(
   }
 }
 
+const BASE_SEPOLIA_RPC = "https://sepolia.base.org"
+
+async function getBaseSepoliaActivity(address: string) {
+  try {
+    const [txCountRes, balanceRes] = await Promise.all([
+      fetch(BASE_SEPOLIA_RPC, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_getTransactionCount",
+          params: [address, "latest"],
+        }),
+      }),
+      fetch(BASE_SEPOLIA_RPC, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 2,
+          method: "eth_getBalance",
+          params: [address, "latest"],
+        }),
+      }),
+    ])
+
+    const txCountData = await txCountRes.json()
+    const txCount = parseInt(txCountData.result, 16)
+
+    const balanceData = await balanceRes.json()
+    const balanceWei = BigInt(balanceData.result)
+    const balanceEth = Number(balanceWei) / 1e18
+
+    return {
+      txCount,
+      balanceEth,
+      hasBaseSepolia: txCount > 0 || balanceEth > 0,
+    }
+  } catch {
+    return { txCount: 0, balanceEth: 0, hasBaseSepolia: false }
+  }
+}
+
+function computeActivityScore(chainActivity: {
+  txCount: number
+  balanceEth: number
+}) {
+  let score = 0
+  if (chainActivity.txCount > 0) score += 20
+  if (chainActivity.txCount > 10) score += 10
+  if (chainActivity.txCount > 50) score += 10
+  if (chainActivity.txCount > 100) score += 10
+  if (chainActivity.balanceEth > 0) score += 10
+  return Math.min(score, 50)
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const address = body.address
@@ -196,25 +253,106 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 })
   }
 
-  try {
-    const mcpResponse = await callMcpTool("compute_composite_score", { address })
+  // Fetch MCP score and on-chain activity in parallel
+  const [mcpResult, chainActivity] = await Promise.all([
+    (async () => {
+      try {
+        const mcpResponse = await callMcpTool("compute_composite_score", {
+          address,
+        })
+        const content = (
+          mcpResponse as {
+            result?: { content?: Array<{ text?: string }> }
+          }
+        ).result?.content
+        if (!content?.[0]?.text) return null
+        const raw: McpCompositeResult = JSON.parse(content[0].text)
+        return mapToTrustScore(raw)
+      } catch {
+        return null
+      }
+    })(),
+    getBaseSepoliaActivity(address),
+  ])
 
-    // MCP tool responses wrap content in result.content[].text
-    const content = (mcpResponse as { result?: { content?: Array<{ text?: string }> } })
-      .result?.content
-    if (!content?.[0]?.text) {
-      throw new Error("Unexpected MCP response structure")
-    }
+  const activityScore = computeActivityScore(chainActivity)
 
-    const raw: McpCompositeResult = JSON.parse(content[0].text)
-    const result = mapToTrustScore(raw)
+  // Hybrid scoring: combine Intuition graph with on-chain activity
+  let finalScore: number
+  let dataSource: string
+  let sybilRisk: "Low" | "Medium" | "High"
+  let factors: Array<{ name: string; score: number }>
 
-    return NextResponse.json({ result })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "MCP unavailable"
-    return NextResponse.json(
-      { error: { message, code: "MCP_UNAVAILABLE" } },
-      { status: 503 }
-    )
+  if (mcpResult && mcpResult.overallScore > 0) {
+    // Intuition graph has data: 70% Intuition + 30% activity
+    finalScore = Math.round(mcpResult.overallScore * 0.7 + activityScore * 0.3)
+    dataSource = "Intuition Protocol Graph + Base Sepolia Activity"
+    sybilRisk = finalScore >= 60 ? "Low" : finalScore >= 30 ? "Medium" : "High"
+    factors = [
+      ...mcpResult.factors,
+      {
+        name: "Base Sepolia Tx Count",
+        score: Math.min(95, chainActivity.txCount * 2),
+      },
+      {
+        name: "Base Sepolia Balance",
+        score: chainActivity.balanceEth > 0 ? 60 : 0,
+      },
+    ]
+  } else if (chainActivity.hasBaseSepolia) {
+    // No Intuition data but has on-chain activity
+    finalScore = activityScore
+    dataSource = "Base Sepolia Activity"
+    sybilRisk = finalScore >= 60 ? "Low" : finalScore >= 30 ? "Medium" : "High"
+    factors = [
+      {
+        name: "Transaction Count",
+        score: Math.min(95, chainActivity.txCount * 2),
+      },
+      { name: "Wallet Age", score: 40 },
+      {
+        name: "ETH Balance",
+        score: chainActivity.balanceEth > 0 ? 60 : 0,
+      },
+      {
+        name: "Network Activity",
+        score: chainActivity.hasBaseSepolia ? 50 : 0,
+      },
+      { name: "Sybil Resistance", score: finalScore },
+    ]
+  } else {
+    // No data at all
+    finalScore = 0
+    dataSource = "No on-chain activity found"
+    sybilRisk = "High"
+    factors = [
+      { name: "Transaction Count", score: 0 },
+      { name: "Wallet Age", score: 0 },
+      { name: "ETH Balance", score: 0 },
+      { name: "Network Activity", score: 0 },
+      { name: "Sybil Resistance", score: 0 },
+    ]
   }
+
+  const result = {
+    address,
+    overallScore: finalScore,
+    sybilRisk,
+    factors,
+    dataSource,
+    timestamp: new Date().toISOString(),
+    ...(mcpResult && mcpResult.overallScore > 0
+      ? {
+          eigenTrust: mcpResult.eigenTrust,
+          agentRank: mcpResult.agentRank,
+        }
+      : {}),
+    chainActivity: {
+      txCount: chainActivity.txCount,
+      balanceEth: chainActivity.balanceEth,
+      activityScore,
+    },
+  }
+
+  return NextResponse.json({ result })
 }

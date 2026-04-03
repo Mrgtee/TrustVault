@@ -32,6 +32,7 @@ C:\Users\RIKI\TrustVault
 - Step 7 ✅ Contract deployed to Base Sepolia
 - Step 8 ✅ Inco Lightning client initialization fixed
 - Step 9 ✅ Real MCP data connection via SSE transport
+- Step 10 ✅ Hybrid scoring: Intuition graph (70%) + Base Sepolia activity (30%)
 
 ## Rules
 - Never start fresh — always read existing files first
