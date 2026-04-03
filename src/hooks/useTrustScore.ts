@@ -67,7 +67,7 @@ export function useTrustScore(address: string | null) {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
+      const timeout = setTimeout(() => controller.abort(), 20000);
 
       const result = await queryTrustScore(addr, controller.signal);
       clearTimeout(timeout);
