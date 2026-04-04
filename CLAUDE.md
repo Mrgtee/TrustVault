@@ -33,6 +33,7 @@ C:\Users\RIKI\TrustVault
 - Step 8 ✅ Inco Lightning client initialization fixed
 - Step 9 ✅ Real MCP data connection via SSE transport
 - Step 10 ✅ Hybrid scoring: Intuition graph (70%) + Base Sepolia activity (30%)
+- Step 11 ✅ Vercel deployment prep: SSR guards, webpack fallbacks, vercel.json
 
 ## Rules
 - Never start fresh — always read existing files first

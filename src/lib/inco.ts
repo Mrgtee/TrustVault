@@ -6,6 +6,10 @@ const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
 let clientPromise: ReturnType<typeof Lightning.custom> | null = null;
 
 async function initLightning() {
+  if (typeof window === "undefined") {
+    throw new Error("Lightning client can only be initialized in the browser");
+  }
+
   const deployment = Lightning.latestDeployment("testnet", CHAIN_ID);
 
   // Use custom() with explicit hostChainRpcUrl to avoid the default http()
@@ -22,9 +26,12 @@ async function initLightning() {
 }
 
 export function getIncoClient() {
+  if (typeof window === "undefined") {
+    throw new Error("getIncoClient must be called from the browser");
+  }
+
   if (!clientPromise) {
     clientPromise = initLightning().catch((err) => {
-      // Reset on failure so the next call retries initialization
       clientPromise = null;
       throw err;
     });

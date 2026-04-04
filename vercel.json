@@ -1,0 +1,11 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_CHAIN_ID": "84532",
+    "NEXT_PUBLIC_TRUST_MCP_URL": "https://mcp-trust.intuition.box",
+    "NEXT_PUBLIC_VAULT_CONTRACT_ADDRESS": "0xaa3Ae25eBac250Ff67F4d9e3195C4C7610055067"
+  }
+}
