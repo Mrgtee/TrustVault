@@ -5,19 +5,19 @@
 
 ## Completed This Session
 - Step 12: Demo mode with preloaded high-scoring addresses
-  - Created `src/data/demo-addresses.ts` with typed DemoAddress array (5 addresses: 2 high, 2 medium, 1 low)
-  - Created `src/components/trust/DemoAddressCard.tsx` with tier badges, hover glow, click handler
-  - Created `src/components/trust/DemoModeSection.tsx` with responsive grid layout
-  - Wired into HeroSection (landing page) below stat pills
-  - Wired into QueryPage below results grid
-  - Both integrations auto-navigate to /query?address=... on card click
-  - Build verified: zero errors
+- Step 13: Architecture page explaining the full TrustVault stack
+  - Created `src/components/architecture/ArchitectureDiagram.tsx` -- 5-layer vertical flow with SVG animated dashed arrows, color-coded borders (lime/gold/blue/purple/white), 70/30 progress bar
+  - Created `src/components/architecture/TechStackGrid.tsx` -- 6 tech cards in responsive 3/2/1-col grid
+  - Created `src/components/architecture/QueryLifecycle.tsx` -- 5-step timeline, horizontal on desktop, vertical on mobile, animated connectors
+  - Created `src/app/architecture/page.tsx` -- assembles all sections with page header, dividers, dot grid bg
+  - Updated `src/components/layout/Navbar.tsx` -- added "Architecture" nav link + made logo a home link
+  - Build verified: zero errors, /architecture prerendered as static
 
 ## In Progress
 - Nothing currently in progress
 
 ## Next Steps
-- Step 13 (TBD by Ludarep)
+- Step 14 (TBD by Ludarep)
 
 ## Blockers
 - None

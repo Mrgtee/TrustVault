@@ -35,6 +35,7 @@ C:\Users\RIKI\TrustVault
 - Step 10 ✅ Hybrid scoring: Intuition graph (70%) + Base Sepolia activity (30%)
 - Step 11 ✅ Vercel deployment prep: SSR guards, webpack fallbacks, vercel.json
 - Step 12 ✅ Demo mode with preloaded high-scoring addresses
+- Step 13 ✅ Architecture page explaining the full TrustVault stack
 
 ## Rules
 - Never start fresh — always read existing files first
