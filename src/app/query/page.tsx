@@ -8,9 +8,14 @@ export const metadata: Metadata = {
 };
 
 interface QueryRouteProps {
-  searchParams: { address?: string };
+  searchParams: { address?: string; ens?: string };
 }
 
 export default function QueryRoute({ searchParams }: QueryRouteProps) {
-  return <QueryPage address={searchParams.address ?? ""} />;
+  return (
+    <QueryPage
+      address={searchParams.address ?? ""}
+      initialEns={searchParams.ens ?? null}
+    />
+  );
 }

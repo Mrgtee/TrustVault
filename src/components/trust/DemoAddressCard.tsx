@@ -64,7 +64,9 @@ export function DemoAddressCard({ demo, onClick }: DemoAddressCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-white">{demo.label}</p>
+            <p className="truncate text-sm font-semibold text-white">
+              {demo.ens ?? demo.label}
+            </p>
             {clicked && (
               <svg className="h-3.5 w-3.5 shrink-0 animate-spin text-white/40" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useTrustScore } from "@/hooks/useTrustScore";
+import { resolveENS } from "@/lib/ens";
 import { TrustScoreCard } from "./TrustScoreCard";
 import { ScoreBreakdown } from "./ScoreBreakdown";
 import { DemoModeSection } from "./DemoModeSection";
@@ -17,6 +18,10 @@ function isValidAddress(addr: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(addr);
 }
 
+function isENSCandidate(input: string): boolean {
+  return input.includes(".") && !input.toLowerCase().startsWith("0x");
+}
+
 function AnimatedDots() {
   return (
     <span className="inline-flex w-6">
@@ -27,14 +32,48 @@ function AnimatedDots() {
   );
 }
 
-export function QueryPage({ address }: { address: string }) {
+interface QueryPageProps {
+  address: string;
+  initialEns?: string | null;
+}
+
+export function QueryPage({ address, initialEns = null }: QueryPageProps) {
   const router = useRouter();
   const { loading, error, data, retry, isFallback } = useTrustScore(address);
   const [queryInput, setQueryInput] = useState("");
   const [inputError, setInputError] = useState(false);
   const [validationMsg, setValidationMsg] = useState("");
+  const [resolving, setResolving] = useState(false);
+  const [resolutionTag, setResolutionTag] = useState<{
+    ens: string;
+    address: string;
+  } | null>(null);
+  const [displayEns, setDisplayEns] = useState<string | null>(initialEns);
 
-  function handleQuery() {
+  // Reverse-lookup ENS for the current address if not provided via URL.
+  useEffect(() => {
+    if (initialEns) {
+      setDisplayEns(initialEns);
+      return;
+    }
+    if (!address || !isValidAddress(address)) {
+      setDisplayEns(null);
+      return;
+    }
+    let cancelled = false;
+    resolveENS(address)
+      .then((result) => {
+        if (!cancelled && result.ens) {
+          setDisplayEns(result.ens);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [address, initialEns]);
+
+  async function handleQuery() {
     const trimmed = queryInput.trim();
     if (!trimmed) {
       setInputError(true);
@@ -42,17 +81,55 @@ export function QueryPage({ address }: { address: string }) {
       setTimeout(() => setInputError(false), 1000);
       return;
     }
-    if (!isValidAddress(trimmed)) {
+
+    const looksLikeAddress = isValidAddress(trimmed);
+    const looksLikeEns = isENSCandidate(trimmed);
+
+    if (!looksLikeAddress && !looksLikeEns) {
       setInputError(true);
-      setValidationMsg("Must be 42 characters starting with 0x");
+      setValidationMsg("Enter a valid 0x address or ENS name");
       setTimeout(() => {
         setInputError(false);
         setValidationMsg("");
       }, 3000);
       return;
     }
+
     setValidationMsg("");
-    router.push(`/query?address=${encodeURIComponent(trimmed)}`);
+    setResolutionTag(null);
+    setResolving(true);
+
+    try {
+      const result = await resolveENS(trimmed);
+
+      if (!isValidAddress(result.address)) {
+        setResolving(false);
+        setInputError(true);
+        setValidationMsg("Could not resolve ENS name");
+        setTimeout(() => {
+          setInputError(false);
+          setValidationMsg("");
+        }, 3000);
+        return;
+      }
+
+      if (result.ens) {
+        setResolutionTag({ ens: result.ens, address: result.address });
+      }
+      setResolving(false);
+
+      const params = new URLSearchParams({ address: result.address });
+      if (result.ens) params.set("ens", result.ens);
+      router.push(`/query?${params.toString()}`);
+    } catch {
+      setResolving(false);
+      setInputError(true);
+      setValidationMsg("Could not resolve ENS name");
+      setTimeout(() => {
+        setInputError(false);
+        setValidationMsg("");
+      }, 3000);
+    }
   }
 
   function handleRetry() {
@@ -78,14 +155,30 @@ export function QueryPage({ address }: { address: string }) {
             <h1 className="text-xl font-bold text-white sm:text-2xl">
               Trust Score Analysis
             </h1>
-            <div className="group relative mt-1 inline-block">
-              <p className="cursor-default font-mono text-sm text-white/40">
-                {truncateAddress(address)}
-              </p>
-              <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden rounded-xl border border-white/10 bg-[#141414] px-3 py-2 font-mono text-xs text-white/60 shadow-xl group-hover:block">
-                {address}
+            {displayEns ? (
+              <div className="mt-1">
+                <p className="text-sm font-semibold text-[#84cc16]">
+                  {displayEns}
+                </p>
+                <div className="group relative inline-block">
+                  <p className="cursor-default font-mono text-xs text-white/30">
+                    {truncateAddress(address)}
+                  </p>
+                  <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden rounded-xl border border-white/10 bg-[#141414] px-3 py-2 font-mono text-xs text-white/60 shadow-xl group-hover:block">
+                    {address}
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="group relative mt-1 inline-block">
+                <p className="cursor-default font-mono text-sm text-white/40">
+                  {truncateAddress(address)}
+                </p>
+                <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden rounded-xl border border-white/10 bg-[#141414] px-3 py-2 font-mono text-xs text-white/60 shadow-xl group-hover:block">
+                  {address}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -102,18 +195,34 @@ export function QueryPage({ address }: { address: string }) {
               type="text"
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleQuery()}
-              placeholder="Query another 0x..."
-              className="flex-1 bg-transparent px-3 py-2 text-xs text-white placeholder-white/25 outline-none"
+              onKeyDown={(e) => e.key === "Enter" && !resolving && handleQuery()}
+              placeholder="0x address or ENS name (e.g. vitalik.eth)"
+              disabled={resolving}
+              className="flex-1 bg-transparent px-3 py-2 text-xs text-white placeholder-white/25 outline-none disabled:opacity-60"
             />
             <button
               onClick={handleQuery}
-              className="m-0.5 rounded-lg bg-[#84cc16] px-4 py-1.5 text-xs font-semibold text-black transition-all hover:bg-[#a3e635]"
+              disabled={resolving}
+              className="m-0.5 rounded-lg bg-[#84cc16] px-4 py-1.5 text-xs font-semibold text-black transition-all hover:bg-[#a3e635] disabled:opacity-60"
             >
               Query
             </button>
           </div>
-          {validationMsg && (
+          {resolving && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-white/50">
+              <svg className="h-3 w-3 animate-spin text-[#84cc16]" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Resolving ENS...
+            </p>
+          )}
+          {!resolving && resolutionTag && (
+            <p className="mt-1.5 text-xs text-[#84cc16]">
+              Resolved: {resolutionTag.ens} &rarr; {truncateAddress(resolutionTag.address)}
+            </p>
+          )}
+          {!resolving && validationMsg && (
             <p className="mt-1.5 text-xs text-red-400">{validationMsg}</p>
           )}
         </div>
