@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useTrustScore } from "@/hooks/useTrustScore";
 import { TrustScoreCard } from "./TrustScoreCard";
 import { ScoreBreakdown } from "./ScoreBreakdown";
+import { DemoModeSection } from "./DemoModeSection";
 
 function truncateAddress(address: string): string {
   if (address.length <= 10) return address;
@@ -103,6 +104,16 @@ export function QueryPage({ address }: { address: string }) {
             loading={loading}
           />
         </div>
+      </div>
+
+      {/* Demo addresses */}
+      <div className="mt-12">
+        <DemoModeSection
+          onSelect={(addr) => {
+            setQueryInput(addr);
+            router.push(`/query?address=${encodeURIComponent(addr)}`);
+          }}
+        />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { DemoModeSection } from "./DemoModeSection";
 
 export function HeroSection() {
   const router = useRouter();
@@ -134,6 +135,16 @@ export function HeroSection() {
           <StatPill label="16K+ Addresses Scored" />
           <StatPill label="EigenTrust + AgentRank" />
           <StatPill label="Powered by Inco Lightning" />
+        </div>
+
+        {/* Demo addresses */}
+        <div className="mt-14 w-full" style={{ maxWidth: 720 }}>
+          <DemoModeSection
+            onSelect={(addr) => {
+              setAddress(addr);
+              router.push(`/query?address=${encodeURIComponent(addr)}`);
+            }}
+          />
         </div>
       </div>
     </section>
