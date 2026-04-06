@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { DemoAddress, DemoTier } from "@/data/demo-addresses";
 
 const TIER_CONFIG: Record<DemoTier, { label: string; bg: string; text: string; border: string; glow: string }> = {
@@ -32,18 +33,28 @@ interface DemoAddressCardProps {
 }
 
 export function DemoAddressCard({ demo, onClick }: DemoAddressCardProps) {
+  const [clicked, setClicked] = useState(false);
   const tier = TIER_CONFIG[demo.tier];
   const truncated = `${demo.address.slice(0, 6)}...${demo.address.slice(-4)}`;
+
+  function handleClick() {
+    setClicked(true);
+    onClick(demo.address);
+  }
 
   return (
     <button
       type="button"
-      onClick={() => onClick(demo.address)}
-      className="group flex w-full flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.06]"
-      style={{ "--card-glow": tier.glow } as React.CSSProperties}
+      onClick={handleClick}
+      disabled={clicked}
+      className={`group flex w-full flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.06] ${
+        clicked ? "animate-pulse opacity-60" : ""
+      }`}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = tier.glow.replace("0.15", "0.5");
-        e.currentTarget.style.boxShadow = `0 0 20px ${tier.glow}`;
+        if (!clicked) {
+          e.currentTarget.style.borderColor = tier.glow.replace("0.15", "0.5");
+          e.currentTarget.style.boxShadow = `0 0 20px ${tier.glow}`;
+        }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
@@ -52,7 +63,15 @@ export function DemoAddressCard({ demo, onClick }: DemoAddressCardProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">{demo.label}</p>
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-semibold text-white">{demo.label}</p>
+            {clicked && (
+              <svg className="h-3.5 w-3.5 shrink-0 animate-spin text-white/40" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+          </div>
           <p className="mt-0.5 font-mono text-xs text-white/30">{truncated}</p>
         </div>
         <span

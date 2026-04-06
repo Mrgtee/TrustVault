@@ -101,7 +101,7 @@ function ScoreRing({ data, loading }: { data: TrustScoreData | null; loading: bo
           {loading ? "--" : displayScore}
         </span>
         <span className="mt-1 text-xs font-medium" style={{ color }}>
-          {loading ? "Loading..." : scoreLabel(score)}
+          {loading ? "Loading..." : score === 0 ? "No Data" : scoreLabel(score)}
         </span>
       </div>
     </div>
@@ -153,12 +153,12 @@ function VaultSection({
   if (vault.status === "error") {
     return (
       <div className="mt-10 w-full space-y-3">
-        <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
           <p className="text-xs text-red-400">{vault.error}</p>
         </div>
         <button
           onClick={vault.reset}
-          className="w-full rounded-lg border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/5"
+          className="w-full rounded-xl border border-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/5"
         >
           Try Again
         </button>
@@ -171,7 +171,7 @@ function VaultSection({
     return (
       <div className="mt-10 w-full space-y-4">
         <div
-          className="flex items-center justify-center gap-3 rounded-lg border border-[#84cc16]/30 bg-[#84cc16]/10 py-4"
+          className="flex items-center justify-center gap-3 rounded-xl border border-[#84cc16]/30 bg-[#84cc16]/10 py-4"
           style={{ animation: "tv-fade-in-up 0.4s ease-out both" }}
         >
           <div className="relative flex h-3 w-3">
@@ -194,7 +194,7 @@ function VaultSection({
     return (
       <div className="mt-10 w-full space-y-4">
         <div
-          className="flex items-center justify-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 py-4"
+          className="flex items-center justify-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 py-4"
           style={{ animation: "tv-fade-in-up 0.4s ease-out both" }}
         >
           <span className="text-sm font-bold tracking-wide text-red-400">
@@ -230,7 +230,7 @@ function VaultSection({
         )}
         <button
           onClick={vault.checkAccess}
-          className="w-full rounded-lg border border-[#84cc16]/30 bg-[#84cc16]/10 py-3.5 text-sm font-semibold text-[#84cc16] transition-all hover:bg-[#84cc16]/20"
+          className="w-full rounded-xl border border-[#84cc16]/30 bg-[#84cc16]/10 py-3.5 text-sm font-semibold text-[#84cc16] transition-all hover:bg-[#84cc16]/20"
         >
           Check Vault Access
         </button>
@@ -244,7 +244,7 @@ function VaultSection({
       <div className="mt-10 w-full space-y-3">
         <button
           disabled
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#84cc16]/50 py-3.5 text-sm font-semibold text-black"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#84cc16]/50 py-3.5 text-sm font-semibold text-black"
         >
           <Spinner />
           {statusLabel(vault.status)}
@@ -290,7 +290,7 @@ function VaultSection({
       <button
         onClick={() => data && vault.encryptAndStore(data.overallScore)}
         disabled={loading || !data}
-        className="w-full rounded-lg bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40 disabled:hover:bg-[#84cc16] disabled:hover:shadow-none"
+        className="w-full rounded-xl bg-[#84cc16] py-3.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)] disabled:opacity-40 disabled:hover:bg-[#84cc16] disabled:hover:shadow-none"
       >
         Encrypt Score On-Chain
       </button>
@@ -317,7 +317,7 @@ export function TrustScoreCard({ data, loading, error, onRetry }: TrustScoreCard
         <p className="text-sm text-white/70">{error}</p>
         <button
           onClick={onRetry}
-          className="mt-6 rounded-lg border border-white/20 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/5"
+          className="mt-6 rounded-xl border border-white/20 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/5"
         >
           Try Again
         </button>
@@ -349,6 +349,13 @@ export function TrustScoreCard({ data, loading, error, onRetry }: TrustScoreCard
           </>
         )}
       </div>
+
+      {/* Zero score notice */}
+      {!loading && data && data.overallScore === 0 && (
+        <div className="mt-6 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-xs text-white/40">
+          No attestations found for this address
+        </div>
+      )}
 
       {/* Vault interaction section */}
       <VaultSection data={data} loading={loading} />

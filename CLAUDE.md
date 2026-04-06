@@ -36,6 +36,7 @@ C:\Users\RIKI\TrustVault
 - Step 11 ✅ Vercel deployment prep: SSR guards, webpack fallbacks, vercel.json
 - Step 12 ✅ Demo mode with preloaded high-scoring addresses
 - Step 13 ✅ Architecture page explaining the full TrustVault stack
+- Step 14 ✅ UI polish: mobile, animations, edge cases, visual consistency
 
 ## Rules
 - Never start fresh — always read existing files first

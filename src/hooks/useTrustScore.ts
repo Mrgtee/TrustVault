@@ -19,6 +19,10 @@ export interface TrustScoreData {
   timestamp: string;
 }
 
+function isValidAddress(addr: string): boolean {
+  return typeof addr === "string" && /^0x[a-fA-F0-9]{40}$/.test(addr);
+}
+
 function generateMockData(address: string): TrustScoreData {
   const hex = address.slice(-6);
   const num = parseInt(hex, 16);
@@ -50,13 +54,11 @@ export function useTrustScore(address: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TrustScoreData | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
 
   const fetchScore = useCallback(async (addr: string) => {
-    const isValid =
-      typeof addr === "string" && addr.startsWith("0x") && addr.length === 42;
-
-    if (!isValid) {
-      setError("Please enter a valid Ethereum address (0x...)");
+    if (!isValidAddress(addr)) {
+      setError("Invalid address format. Must be 42 characters starting with 0x.");
       setLoading(false);
       return;
     }
@@ -64,18 +66,23 @@ export function useTrustScore(address: string | null) {
     setLoading(true);
     setError(null);
     setData(null);
+    setIsFallback(false);
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
       const result = await queryTrustScore(addr, controller.signal);
       clearTimeout(timeout);
 
       setData(result as TrustScoreData);
       setLoading(false);
-    } catch {
-      console.warn("MCP unavailable, using mock data");
+    } catch (err) {
+      const isTimeout = err instanceof DOMException && err.name === "AbortError";
+      console.warn(
+        isTimeout ? "MCP request timed out, using fallback" : "MCP unavailable, using fallback"
+      );
+      setIsFallback(true);
       setData(generateMockData(addr));
       setLoading(false);
     }
@@ -92,5 +99,5 @@ export function useTrustScore(address: string | null) {
     }
   }, [address, fetchScore]);
 
-  return { loading, error, data, retry };
+  return { loading, error, data, retry, isFallback };
 }

@@ -13,19 +13,45 @@ function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function isValidAddress(addr: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(addr);
+}
+
+function AnimatedDots() {
+  return (
+    <span className="inline-flex w-6">
+      <span className="animate-pulse">.</span>
+      <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>.</span>
+      <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>.</span>
+    </span>
+  );
+}
+
 export function QueryPage({ address }: { address: string }) {
   const router = useRouter();
-  const { loading, error, data, retry } = useTrustScore(address);
+  const { loading, error, data, retry, isFallback } = useTrustScore(address);
   const [queryInput, setQueryInput] = useState("");
   const [inputError, setInputError] = useState(false);
+  const [validationMsg, setValidationMsg] = useState("");
 
   function handleQuery() {
     const trimmed = queryInput.trim();
     if (!trimmed) {
       setInputError(true);
+      setValidationMsg("");
       setTimeout(() => setInputError(false), 1000);
       return;
     }
+    if (!isValidAddress(trimmed)) {
+      setInputError(true);
+      setValidationMsg("Must be 42 characters starting with 0x");
+      setTimeout(() => {
+        setInputError(false);
+        setValidationMsg("");
+      }, 3000);
+      return;
+    }
+    setValidationMsg("");
     router.push(`/query?address=${encodeURIComponent(trimmed)}`);
   }
 
@@ -44,7 +70,7 @@ export function QueryPage({ address }: { address: string }) {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push("/")}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
@@ -56,8 +82,7 @@ export function QueryPage({ address }: { address: string }) {
               <p className="cursor-default font-mono text-sm text-white/40">
                 {truncateAddress(address)}
               </p>
-              {/* Full address tooltip */}
-              <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden rounded-lg border border-white/10 bg-[#141414] px-3 py-2 font-mono text-xs text-white/60 shadow-xl group-hover:block">
+              <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden rounded-xl border border-white/10 bg-[#141414] px-3 py-2 font-mono text-xs text-white/60 shadow-xl group-hover:block">
                 {address}
               </div>
             </div>
@@ -65,9 +90,9 @@ export function QueryPage({ address }: { address: string }) {
         </div>
 
         {/* Query another */}
-        <div className="flex w-full max-w-xs">
+        <div className="w-full max-w-xs">
           <div
-            className="flex w-full rounded-lg border bg-white/[0.04] backdrop-blur-sm"
+            className="flex w-full rounded-xl border bg-white/[0.04] backdrop-blur-sm"
             style={{
               borderColor: inputError ? "rgba(239,68,68,0.6)" : "rgba(255,255,255,0.15)",
               transition: "border-color 0.3s ease",
@@ -83,13 +108,40 @@ export function QueryPage({ address }: { address: string }) {
             />
             <button
               onClick={handleQuery}
-              className="m-0.5 rounded-md bg-[#84cc16] px-4 py-1.5 text-xs font-semibold text-black transition-all hover:bg-[#a3e635]"
+              className="m-0.5 rounded-lg bg-[#84cc16] px-4 py-1.5 text-xs font-semibold text-black transition-all hover:bg-[#a3e635]"
             >
               Query
             </button>
           </div>
+          {validationMsg && (
+            <p className="mt-1.5 text-xs text-red-400">{validationMsg}</p>
+          )}
         </div>
       </div>
+
+      {/* Loading status text */}
+      {loading && (
+        <div
+          className="mb-6 flex items-center justify-center gap-2 text-sm text-white/40"
+          style={{ animation: "tv-fade-in 0.3s ease-out both" }}
+        >
+          <svg className="h-4 w-4 animate-spin text-[#84cc16]" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span>Querying trust graph<AnimatedDots /></span>
+        </div>
+      )}
+
+      {/* Fallback banner */}
+      {isFallback && !loading && (
+        <div
+          className="mb-6 rounded-xl border border-[#eab308]/20 bg-[#eab308]/5 px-4 py-3 text-center text-xs text-[#eab308]/80"
+          style={{ animation: "tv-fade-in-up 0.3s ease-out both" }}
+        >
+          Trust graph unavailable -- showing cached estimate
+        </div>
+      )}
 
       {/* Main content grid */}
       <div className="grid gap-6 lg:grid-cols-3">

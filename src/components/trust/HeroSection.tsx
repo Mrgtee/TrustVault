@@ -9,6 +9,7 @@ export function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
   const [address, setAddress] = useState("");
   const [inputError, setInputError] = useState(false);
+  const [validationMsg, setValidationMsg] = useState("");
 
   useEffect(() => {
     function handleScroll() {
@@ -22,9 +23,20 @@ export function HeroSection() {
     const trimmed = address.trim();
     if (!trimmed) {
       setInputError(true);
+      setValidationMsg("");
       setTimeout(() => setInputError(false), 1000);
       return;
     }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(trimmed)) {
+      setInputError(true);
+      setValidationMsg("Must be 42 characters starting with 0x");
+      setTimeout(() => {
+        setInputError(false);
+        setValidationMsg("");
+      }, 3000);
+      return;
+    }
+    setValidationMsg("");
     router.push(`/query?address=${encodeURIComponent(trimmed)}`);
   }
 
@@ -70,13 +82,13 @@ export function HeroSection() {
         {/* Heading */}
         <div className="flex flex-col gap-1">
           <h1
-            className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
+            className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
             style={{ animation: "tv-fade-in-up 0.6s ease-out 0.15s both" }}
           >
             Trust is the missing
           </h1>
           <h1
-            className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
+            className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
             style={{ animation: "tv-fade-in-up 0.6s ease-out 0.3s both" }}
           >
             Web3{" "}
@@ -99,7 +111,7 @@ export function HeroSection() {
           style={{ maxWidth: 560, animation: "tv-fade-in-up 0.5s ease-out 0.65s both" }}
         >
           <div
-            className="flex rounded-lg bg-white/[0.04] backdrop-blur-sm"
+            className="flex rounded-xl bg-white/[0.04] backdrop-blur-sm"
             style={{
               border: inputError
                 ? "1px solid rgba(239,68,68,0.6)"
@@ -117,14 +129,18 @@ export function HeroSection() {
             />
             <button
               onClick={handleQuery}
-              className="m-1 rounded-md bg-[#84cc16] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)]"
+              className="m-1 rounded-lg bg-[#84cc16] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#a3e635] hover:shadow-[0_0_24px_rgba(132,204,22,0.3)]"
             >
               Query
             </button>
           </div>
-          <p className="mt-3 text-xs text-white/30">
-            No wallet needed. Query any address instantly.
-          </p>
+          {validationMsg ? (
+            <p className="mt-3 text-xs text-red-400">{validationMsg}</p>
+          ) : (
+            <p className="mt-3 text-xs text-white/30">
+              No wallet needed. Query any address instantly.
+            </p>
+          )}
         </div>
 
         {/* Stat pills */}
