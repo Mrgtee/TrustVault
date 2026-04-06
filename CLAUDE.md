@@ -37,6 +37,7 @@ C:\Users\RIKI\TrustVault
 - Step 12 ✅ Demo mode with preloaded high-scoring addresses
 - Step 13 ✅ Architecture page explaining the full TrustVault stack
 - Step 14 ✅ UI polish: mobile, animations, edge cases, visual consistency
+- Step 15 ✅ README, ARCHITECTURE.md, .env.example
 
 ## Rules
 - Never start fresh — always read existing files first

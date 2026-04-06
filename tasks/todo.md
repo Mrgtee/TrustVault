@@ -4,23 +4,21 @@
 2026-04-06
 
 ## Completed This Session
-- Step 12: Demo mode with preloaded high-scoring addresses
-- Step 13: Architecture page explaining the full TrustVault stack
-- Step 14: UI polish -- mobile, animations, edge cases, visual consistency
-  - **Mobile**: Navbar now has hamburger menu with slide-down panel on small screens; hero heading scales text-3xl on mobile up to text-7xl on desktop
-  - **Loading states**: Query page shows "Querying trust graph..." spinner with animated dots during load; fallback banner when MCP is unavailable
-  - **Validation**: Both hero and query page inputs validate address format (42 chars, starts with 0x) with inline error messages
-  - **Edge cases**: Score=0 shows "No attestations found" message; MCP timeout reduced to 10s with friendly fallback banner; hook exposes `isFallback` flag
-  - **Demo cards**: Clicked card shows pulse animation + spinner until navigation completes
-  - **Visual consistency**: All outer cards/containers unified to rounded-xl; inner buttons stay rounded-lg; query page metadata added
-  - **Footer**: Already present in layout.tsx, confirmed on all pages
+- Step 15: README and docs
+  - **README.md**: Full rewrite with project description, architecture summary, tech stack table, smart contract details (actual function names from contract), local dev setup, env vars, query lifecycle, and credits
+  - **ARCHITECTURE.md**: Technical deep-dive (~550 words) covering EigenTrust, AgentRank, hybrid 70/30 scoring, MCP transport, FHE encryption flow, contract design, and limitations
+  - **.env.example**: Single required env var (NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) with comment -- other config is hardcoded in src/constants/index.ts
+  - Corrected task spec: contract uses euint256 (not euint64), function names match actual contract (storeEncryptedScore, checkAccess, getEncryptedScore, not the names in the task brief)
   - Build verified: zero errors
 
 ## In Progress
 - Nothing currently in progress
 
 ## Next Steps
-- Step 15 (TBD by Ludarep)
+- Step 16 (TBD by Ludarep)
 
 ## Blockers
 - None
+
+## Security Notes
+- .env.local contains a PRIVATE_KEY in plaintext -- flagged to Ludarep for rotation
