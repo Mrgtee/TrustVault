@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useTrustScore } from "@/hooks/useTrustScore";
@@ -137,6 +137,14 @@ export function QueryPage({ address, initialEns = null }: QueryPageProps) {
     router.replace(`/query?address=${encodeURIComponent(address)}`);
   }
 
+  const handleDemoSelect = useCallback(
+    (addr: string) => {
+      setQueryInput(addr);
+      router.push(`/query?address=${encodeURIComponent(addr)}`);
+    },
+    [router]
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
       {/* Top bar */}
@@ -269,12 +277,7 @@ export function QueryPage({ address, initialEns = null }: QueryPageProps) {
 
       {/* Demo addresses */}
       <div className="mt-12">
-        <DemoModeSection
-          onSelect={(addr) => {
-            setQueryInput(addr);
-            router.push(`/query?address=${encodeURIComponent(addr)}`);
-          }}
-        />
+        <DemoModeSection onSelect={handleDemoSelect} />
       </div>
     </div>
   );

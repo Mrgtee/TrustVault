@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 const MCP_BASE = "https://mcp-trust.intuition.box"
-const MCP_TIMEOUT = 20_000
+const MCP_TIMEOUT = 30_000
 
 interface SseEvent {
   event?: string
@@ -88,6 +88,7 @@ async function callMcpTool(
 ): Promise<Record<string, unknown>> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), MCP_TIMEOUT)
+  let reader: ReadableStreamDefaultReader<Uint8Array> | null = null
 
   try {
     // Open SSE connection
@@ -100,14 +101,14 @@ async function callMcpTool(
       throw new Error(`SSE connect failed: ${sseRes.status}`)
     }
 
-    const reader = sseRes.body.getReader()
+    reader = sseRes.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ""
     let sessionPath = ""
 
     const readEvents = async (): Promise<SseEvent[]> => {
       for (;;) {
-        const { done, value } = await reader.read()
+        const { done, value } = await reader!.read()
         if (done) throw new Error("SSE stream closed unexpectedly")
         buffer += decoder.decode(value, { stream: true })
         const { events, remaining } = parseSseChunk(buffer)
@@ -175,9 +176,6 @@ async function callMcpTool(
     })
     const toolResult = await waitForId(2)
 
-    // Close SSE stream
-    reader.cancel().catch(() => {})
-
     if ("error" in toolResult) {
       throw new Error(`Tool error: ${JSON.stringify(toolResult.error)}`)
     }
@@ -185,6 +183,10 @@ async function callMcpTool(
     return toolResult
   } finally {
     clearTimeout(timeout)
+    // Always close the SSE stream, on success or failure.
+    if (reader) {
+      reader.cancel().catch(() => {})
+    }
   }
 }
 
@@ -245,12 +247,20 @@ function computeActivityScore(chainActivity: {
   return Math.min(score, 50)
 }
 
+// Trust scores are dynamic and address-specific. Never cache the response.
+export const dynamic = "force-dynamic"
+
+const NO_STORE_HEADERS = { "Cache-Control": "no-store, max-age=0" } as const
+
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const address = body.address
 
   if (!address || !address.startsWith("0x") || address.length !== 42) {
-    return NextResponse.json({ error: "Invalid address" }, { status: 400 })
+    return NextResponse.json(
+      { error: "Invalid address" },
+      { status: 400, headers: NO_STORE_HEADERS }
+    )
   }
 
   // Fetch MCP score and on-chain activity in parallel
@@ -354,5 +364,5 @@ export async function POST(req: NextRequest) {
     },
   }
 
-  return NextResponse.json({ result })
+  return NextResponse.json({ result }, { headers: NO_STORE_HEADERS })
 }

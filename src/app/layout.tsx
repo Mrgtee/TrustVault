@@ -7,12 +7,30 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const SITE_URL = "https://trust-vault-steel.vercel.app";
+const SITE_DESCRIPTION =
+  "Confidential trust scoring for Web3 wallets. EigenTrust + AgentRank over the Intuition Protocol graph, encrypted on-chain via Inco Lightning FHE.";
 
 export const metadata: Metadata = {
-  title: "TrustVault",
-  description:
-    "Confidential Trust Infrastructure powered by Inco Lightning",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "TrustVault \u2014 Confidential Trust Infrastructure",
+    template: "%s | TrustVault",
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    title: "TrustVault \u2014 Confidential Trust Infrastructure",
+    description: SITE_DESCRIPTION,
+    siteName: "TrustVault",
+  },
 };
 
 export default function RootLayout({

@@ -3,7 +3,7 @@ import { TechStackGrid } from "@/components/architecture/TechStackGrid";
 import { QueryLifecycle } from "@/components/architecture/QueryLifecycle";
 
 export const metadata = {
-  title: "Architecture - TrustVault",
+  title: "Architecture",
   description:
     "How TrustVault works: hybrid trust scoring with EigenTrust, Intuition Protocol, and Inco Lightning FHE encryption",
 };

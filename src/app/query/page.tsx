@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { QueryPage } from "@/components/trust/QueryPage";
 
 export const metadata: Metadata = {
-  title: "Trust Score Query - TrustVault",
+  title: "Query Trust Score",
   description:
     "Query any Ethereum address for a hybrid trust score powered by EigenTrust, Intuition Protocol, and Inco Lightning FHE encryption",
 };

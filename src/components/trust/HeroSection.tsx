@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DemoModeSection } from "./DemoModeSection";
 
@@ -18,6 +18,14 @@ export function HeroSection() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleDemoSelect = useCallback(
+    (addr: string) => {
+      setAddress(addr);
+      router.push(`/query?address=${encodeURIComponent(addr)}`);
+    },
+    [router]
+  );
 
   function handleQuery() {
     const trimmed = address.trim();
@@ -155,12 +163,7 @@ export function HeroSection() {
 
         {/* Demo addresses */}
         <div className="mt-14 w-full" style={{ maxWidth: 720 }}>
-          <DemoModeSection
-            onSelect={(addr) => {
-              setAddress(addr);
-              router.push(`/query?address=${encodeURIComponent(addr)}`);
-            }}
-          />
+          <DemoModeSection onSelect={handleDemoSelect} />
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { DemoAddress, DemoTier } from "@/data/demo-addresses";
 
 const TIER_CONFIG: Record<DemoTier, { label: string; bg: string; text: string; border: string; glow: string }> = {
@@ -32,7 +32,7 @@ interface DemoAddressCardProps {
   onClick: (address: string) => void;
 }
 
-export function DemoAddressCard({ demo, onClick }: DemoAddressCardProps) {
+function DemoAddressCardImpl({ demo, onClick }: DemoAddressCardProps) {
   const [clicked, setClicked] = useState(false);
   const tier = TIER_CONFIG[demo.tier];
   const truncated = `${demo.address.slice(0, 6)}...${demo.address.slice(-4)}`;
@@ -86,3 +86,5 @@ export function DemoAddressCard({ demo, onClick }: DemoAddressCardProps) {
     </button>
   );
 }
+
+export const DemoAddressCard = memo(DemoAddressCardImpl);
