@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     template: "%s | TrustVault",
   },
   description: SITE_DESCRIPTION,
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     type: "website",
     url: SITE_URL,
