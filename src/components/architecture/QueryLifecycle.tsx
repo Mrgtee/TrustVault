@@ -34,7 +34,7 @@ const STEPS: Step[] = [
     number: 5,
     title: "FHE Encryption",
     description:
-      "Score encrypted on-chain via Inco Lightning, stored as euint64, decryptable only by authorized wallets",
+      "Score encrypted on-chain via Inco Lightning, stored as euint256, decryptable only by authorized wallets",
   },
 ];
 

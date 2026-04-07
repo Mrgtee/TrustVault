@@ -72,6 +72,10 @@ export function ScoreBreakdown({ factors, dataSource, timestamp, loading }: Scor
             <SkeletonBar />
             <SkeletonBar />
           </>
+        ) : factors && factors.every((f) => f.score === 0) ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-xs text-white/40">
+            No attestations found for this address
+          </div>
         ) : (
           factors?.map((f, i) => (
             <FactorBar key={f.name} name={f.name} score={f.score} index={i} mounted={mounted} />

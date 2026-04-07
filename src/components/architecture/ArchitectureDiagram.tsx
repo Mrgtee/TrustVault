@@ -82,8 +82,8 @@ const LAYERS: Layer[] = [
         details: [
           "Inco Lightning FHE coprocessor",
           "Base Sepolia (0xaa3A...0067)",
-          "euint64 encrypted scores",
-          "FHE.asEuint64() + requestDecrypt",
+          "euint256 encrypted scores",
+          "Encrypted threshold comparisons (ebool)",
         ],
       },
     ],

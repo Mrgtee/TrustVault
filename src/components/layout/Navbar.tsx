@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ShieldCheck, Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
+  { href: "/query", label: "Query" },
   { href: "/architecture", label: "Architecture" },
 ] as const;
 

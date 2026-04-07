@@ -1,4 +1,10 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 export function CTASection() {
+  const router = useRouter();
+
   return (
     <section className="px-4 py-24">
       <div
@@ -11,7 +17,10 @@ export function CTASection() {
         <p className="mt-4 text-base text-white/50">
           Connect your wallet and query the graph in seconds.
         </p>
-        <button className="mt-10 rounded-xl bg-[#84cc16] px-10 py-4 text-base font-semibold text-black transition-all hover:scale-[1.02] hover:shadow-[0_0_32px_rgba(132,204,22,0.25)] active:scale-[0.98]">
+        <button
+          onClick={() => router.push("/query")}
+          className="mt-10 rounded-xl bg-[#84cc16] px-10 py-4 text-base font-semibold text-black transition-all hover:scale-[1.02] hover:shadow-[0_0_32px_rgba(132,204,22,0.25)] active:scale-[0.98]"
+        >
           Connect &amp; Query
         </button>
         <p className="mt-6 text-xs text-white/30">

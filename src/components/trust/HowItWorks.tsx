@@ -29,7 +29,7 @@ const steps: StepCard[] = [
     icon: Lock,
     title: "Encrypt On-Chain",
     description:
-      "Your score is encrypted as euint64 via Inco Lightning. The threshold stays hidden too.",
+      "Your score is encrypted as euint256 via Inco Lightning. The threshold stays hidden too.",
   },
   {
     step: "04",

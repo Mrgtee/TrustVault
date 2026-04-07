@@ -9,8 +9,8 @@ interface Stat {
 }
 
 const stats: Stat[] = [
-  { value: 16000, suffix: "+", label: "Addresses in Graph" },
-  { value: 97, suffix: "%", label: "Test Coverage" },
+  { value: 16445, suffix: "", label: "Addresses Scored" },
+  { value: 16996, suffix: "", label: "Attestations" },
   { value: 2, suffix: "", label: "Scoring Algorithms" },
 ];
 
